@@ -11,7 +11,26 @@ app.use(express.json());
 app.use("/customer",session({secret:"fingerprint_customer",resave: true, saveUninitialized: true}))
 
 app.use("/customer/auth/*", function auth(req,res,next){
-//Write the authenication mechanism here
+const token = req.body.token;
+
+// Check if a token is provided
+if (!token) {
+  return res.status(401).json({ message: "Missing token" });
+}
+
+try {
+  // Verify and decode the JWT token
+  const decoded = jwt.verify(token, 'fingerprint_customer');
+
+  // Add the decoded user information to the request object
+  req.user = decoded;
+
+  // Proceed to the next middleware or route handler
+  next();
+} catch (error) {
+  // Return an error if the token is invalid or expired
+  return res.status(401).json({ message: "Invalid token" });
+}
 });
  
 const PORT =5000;
